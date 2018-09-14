@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <title>电影院座位选择</title>
+    <style>
+        html,body{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .seat-con{
+            width: 100%;
+            height: 600px;
+            overflow: auto;
+        }
+        .seat-con canvas{
+            touch-action: none;
+        }
+        .seat-map{
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<!--<div style="height: 100px;background: aliceblue">hh</div>
+<div class="seat-con">
+    <canvas id="canvasMap">
+
+    </canvas>
+</div>-->
+<div style="height: 50px;background: aliceblue">hh</div>
+<canvas id="canvasMap2">
+
+</canvas>
+
+<script>
+    var imgLoaded1 = false, imgLoaded2 = false;
+    var imgObj = new Image(), screenImg = new Image();
+    imgObj.src = "./seat.png";
+    screenImg.src = "data:image/svg+xml;charset=utf8,<svg width='301px' height='44px' viewBox='0 0 301 44' xmlns='http://www.w3.org/2000/svg'><g fill='red' fill-rule='evenodd'><path d='M238.5 34.593c0 5.028-4.1 9.104-9.163 9.104H95.31L14.662 44C9.6 44 5.5 39.924 5.5 34.896L0 .303 82.48 0H244l-5.5 34.593z'/><path d='M295.5 34.593c0 5.028-4.1 9.104-9.163 9.104H152.31L71.662 44C66.6 44 62.5 39.924 62.5 34.896L57 .303 139.48 0H301l-5.5 34.593z'/></g></svg>";
+    //imgObj.src = "https://gw.alicdn.com/tfs/TB1S8see3mTBuNjy1XbXXaMrVXa-256-240.png";
+    //待图片加载完后，将其显示在canvas上
+    imgObj.onload = function(){
+        imgLoaded1 = true
+        //imgLoaded1&&imgLoaded2&&SeatMap('canvasMap', imgObj, screenImg)
+    }
+    screenImg.onload = function () {
+        imgLoaded2 = true
+        //imgLoaded1&&imgLoaded2&&SeatMap('canvasMap', imgObj, screenImg)
+    }
+
+    var SeatMap = function SeatMap (id, imgobj, screenImg) {
+        var seatCanvas = document.getElementById(id);
+        var ctx = seatCanvas.getContext('2d');
+
+        //初始化设置canvas 大小及css样式
+        var width = window.screen.width;
+        var height = window.screen.height - 300;
+        seatCanvas.width = width*2;
+        seatCanvas.height = height*2;
+        seatCanvas.style = "width: " + width + "px;height: "+height+"px;background: rgba(0,0,0,.1);"
+
+        //初始化事件监听
+        initEvensListener();
+
+        //绘制初始化
+        var ctxScale = 1;
+        var ctxCurrentXY = {x:0,y:0};
+        draw(ctx, imgObj, ctxScale)
+
+        //绘制图片
+        function draw(ctx, imgObj, scale) {
+            ctx.clearRect(0,0,seatCanvas.width,seatCanvas.height);
+            //绘制座位
+            ctx.save();
+            ctx.scale(scale,scale)
+            //console.log(ctxCurrentXY.valueOf())
+            ctx.translate(ctxCurrentXY.x,ctxCurrentXY.y);
+
+            let startX = 10, startY = 70, space = 40, columnSpace = space/8, rowspace = space/4;
+            for(var i=0;i<7;++i){
+                for(var j=0;j<17;++j){
+                    ctx.drawImage(imgObj, 0, 0, 80, 80, startX, startY, space, space);
+                    startX += space + columnSpace;
+                }
+                startY += space + rowspace;
+                startX = 10;
+            }
+            ctx.restore();
+
+
+            //绘制影院座位标识
+            ctx.save()
+            ctx.translate(0,ctxCurrentXY.y)
+            //设置座位引导图的属性
+            var seatIndexCom = {
+                width: 32,
+                offsetX: 20,
+                offsetY: 50
+            }
+            ctx.beginPath();
+            ctx.arc(seatIndexCom.offsetX+seatIndexCom.width/2, seatIndexCom.offsetY+seatIndexCom.width/2, seatIndexCom.width/2, 0, Math.PI, true);
+            ctx.lineTo(seatIndexCom.offsetX,seatIndexCom.offsetY+50*7)
+            ctx.arc(seatIndexCom.offsetX+seatIndexCom.width/2, seatIndexCom.offsetY+50*7, seatIndexCom.width/2,Math.PI ,0, true);
+            ctx.lineTo(seatIndexCom.offsetX+seatIndexCom.width, seatIndexCom.offsetY+seatIndexCom.width)
+            ctx.fillStyle = 'rgba(0,0,0,.3)';
+            ctx.fill()
+            /*ctx.restore();
+            //画排号
+            ctx.save();*/
+            ctx.font="30px Arial";
+            ctx.fillStyle = 'white'
+            var txt1="1";
+            var txtWidth1 = ctx.measureText(txt1).width
+            for(var j=1;j<7;++j){
+                ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*j)
+            }
+            /*ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*1)
+            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*2)
+            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*3)
+            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*4)
+            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*5)*/
+            ctx.restore();
+
+
+            //绘制影院屏幕及屏幕标题
+            ctx.save()
+            ctx.translate(ctxCurrentXY.x*scale,0);
+            ctx.drawImage(screenImg, 0, 0, 301, 44, seatCanvas.width*scale/2 - 150, 0, 301, 50);
+            ctx.font="30px Arial";
+            var txt="1号厅银幕";
+            var txtWidth = ctx.measureText(txt).width
+            ctx.fillText(txt,seatCanvas.width*scale/2-txtWidth/2,38);
+            ctx.restore();
+
+            //画一条中线
+            ctx.save()
+            ctx.translate(ctxCurrentXY.x*scale,0);
+            ctx.beginPath();
+            ctx.moveTo(seatCanvas.width*scale/2, 150*scale)
+            ctx.lineTo(seatCanvas.width*scale/2, 500*scale)
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "green";
+            ctx.stroke()
+            ctx.restore()
+
+        }
+
+        //添加事件监听
+        function initEvensListener() {
+            var customHandler = {
+                data: {},
+                handleEvent: function (event) {
+                    switch (event.type) {
+                        case 'touchstart':
+                            this.handleTouchStart(event);
+                            break;
+                        case 'touchmove':
+                            this.handleTouchMove(event);
+                            break;
+                        case 'touchend':
+                            this.handleTouchEnd(event);
+                            break;
+                        case 'click':
+                            this.handleClick(event)
+                        default:
+                            break;
+                    }
+                },
+                handleTouchStart : function (e) {
+                    e = e.targetTouches[0];
+                    this.data.startX = e.pageX;
+                    this.data.startY = e.pageY;
+                    this.data.isDrag = true;
+                },
+                handleTouchMove: function (e) {
+                    if(!this.data.isDrag) return;
+                    e = e.targetTouches[0];
+
+                    var offsetX = e.pageX - this.data.startX;
+                    var offsetY = e.pageY - this.data.startY;
+
+                   this.data.startX = e.pageX;
+                   this.data.startY = e.pageY;
+                   ctxCurrentXY.x += offsetX*2;
+                   ctxCurrentXY.y += offsetY*2;
+
+
+
+                    draw(ctx, imgObj, ctxScale);
+                },
+                handleTouchEnd: function (e) {
+                    this.data.isDrag = false;
+
+                    if(ctxCurrentXY.x > 0){
+                        ctxCurrentXY.x = 0;
+                    }else if((ctxCurrentXY.x + 45*17)*ctxScale < seatCanvas.width){
+                        ctxCurrentXY.x = Math.floor(seatCanvas.width/ctxScale) - 45*17;
+                    }
+                    if(ctxCurrentXY.y > 0){
+                        ctxCurrentXY.y = 0;
+                    }else if((ctxCurrentXY.y + 50*7)*ctxScale < seatCanvas.height){
+                        if(50*7*ctxScale<seatCanvas.height){
+                            ctxCurrentXY.y = 0 ;
+                        }else{
+                            ctxCurrentXY.y = Math.floor(seatCanvas.height/ctxScale)- 50*7 - 80
+                        }
+
+                    }
+                    draw(ctx, imgObj, ctxScale)
+
+                },
+                handleClick: function (e) {
+                    //console.log('click point:',e.offsetX,e.offsetY,e)
+                    //判断点击位置
+                    var column  = Math.round((e.offsetX*2 - ctxCurrentXY.x)/45)
+                    console.log('click column',column)
+
+
+                    //ctxScale += 0.1;
+                    //draw(ctx,imgObj, ctxScale)
+                }
+            }
+            seatCanvas.addEventListener('click', customHandler)
+            seatCanvas.addEventListener('touchstart', customHandler)
+            seatCanvas.addEventListener('touchmove', customHandler)
+            seatCanvas.addEventListener('touchend', customHandler)
+        }
+    }
+
+</script>
+
+<script>
+    function loadImg(callback) {
+        var imgObjArr = [],
+            imgArr = [
+                "./seat.png",
+                "data:image/svg+xml;charset=utf8,<svg width='301px' height='44px' viewBox='0 0 301 44' xmlns='http://www.w3.org/2000/svg'><g fill='red' fill-rule='evenodd'><path d='M238.5 34.593c0 5.028-4.1 9.104-9.163 9.104H95.31L14.662 44C9.6 44 5.5 39.924 5.5 34.896L0 .303 82.48 0H244l-5.5 34.593z'/><path d='M295.5 34.593c0 5.028-4.1 9.104-9.163 9.104H152.31L71.662 44C66.6 44 62.5 39.924 62.5 34.896L57 .303 139.48 0H301l-5.5 34.593z'/></g></svg>"
+            ];
+        var loaded = 0;
+        imgArr.forEach(function (value, index) {
+            var imgObj = new Image();
+            imgObj.onload = function(){
+                loaded++;
+                imgObjArr[index] = imgObj
+                delete imgObj;
+
+                if(loaded === imgArr.length) callback(imgObjArr)
+            }
+            imgObj.src = value
+        })
+    }
+
+    var cameraSeat = null;
+    loadImg(function (arr) {
+        cameraSeat = CameraSeat('#canvasMap2',{
+            width:window.screen.width,
+            height:500,
+            seatImg:arr[0],
+            screenImg: arr[1]
+        }).init();
+    })
+
+
+    var CameraSeat = function (container,params) {
+        if(!(this instanceof CameraSeat)) return new CameraSeat(container, params);
+
+        var screenImg = params.screenImg,
+            seatImg = params.seatImg,
+            seatCanvas = null,
+            ctx = null,
+            ctxOriginData = {
+                scale: 1,
+                x: 0,
+                y:0
+            },
+            seatCellSpace = 0,
+            allSeatWidth = 0,
+            allSeatHeight = 0,
+            columns = 23,
+            rows = 10,
+            paddingTop = 80,
+            paddingBottom = 80,
+            paddingLR = 0;
+
+        var customHandler = {
+            data: {},
+            handleEvent: function (event) {
+                switch (event.type) {
+                    case 'touchstart':
+                        this.handleTouchStart(event);
+                        break;
+                    case 'touchmove':
+                        this.handleTouchMove(event);
+                        break;
+                    case 'touchend':
+                        this.handleTouchEnd(event);
+                        break;
+                    case 'click':
+                        this.handleClick(event)
+                    default:
+                        break;
+                }
+            },
+            handleTouchStart : function (e) {
+                e = e.targetTouches[0];
+                this.data.startX = e.pageX;
+                this.data.startY = e.pageY;
+                this.data.isDrag = true;
+            },
+            handleTouchMove: function (e) {
+                if(!this.data.isDrag) return;
+                e = e.targetTouches[0];
+
+                var offsetX = e.pageX - this.data.startX;
+                var offsetY = e.pageY - this.data.startY;
+
+                this.data.startX = e.pageX;
+                this.data.startY = e.pageY;
+                ctxOriginData.x += offsetX*2;
+                ctxOriginData.y += offsetY*2;
+
+
+
+                cs.drawCanvas();
+            },
+            handleTouchEnd: function (e) {
+                this.data.isDrag = false;
+
+                if(ctxOriginData.x > 0){
+                    ctxOriginData.x = 0;
+                }else if(ctxOriginData.x + allSeatWidth*ctxOriginData.scale + 2*paddingLR < seatCanvas.width){
+                    ctxOriginData.x = seatCanvas.width - allSeatWidth*ctxOriginData.scale - 2*paddingLR;
+                }
+                if(ctxOriginData.y > 0){
+                    ctxOriginData.y = 0;
+                }else if(ctxOriginData.y + paddingTop + allSeatHeight*ctxOriginData.scale + paddingBottom < seatCanvas.height){
+                    if(allSeatHeight*ctxOriginData.scale+paddingTop+paddingBottom<seatCanvas.height){
+                        ctxOriginData.y = 0 ;
+                    }else{
+                        ctxOriginData.y = seatCanvas.height- allSeatHeight*ctxOriginData.scale - paddingTop - paddingBottom
+                    }
+                }
+                cs.drawCanvas()
+
+            },
+            handleClick: function (e) {
+                //console.log('click point:',e.offsetX,e.offsetY,e)
+                //判断点击位置
+                let cellColOffset = (e.offsetX*2 - ctxOriginData.x - paddingLR)%(seatCellSpace*9/8*ctxOriginData.scale);
+                let column  = Math.floor((e.offsetX*2 - ctxOriginData.x - paddingLR)/(seatCellSpace*9/8*ctxOriginData.scale));
+                let cellRowOffset = (e.offsetY*2 - ctxOriginData.y - paddingTop)%(seatCellSpace*5/4*ctxOriginData.scale);
+                let row  = Math.floor((e.offsetY*2 - ctxOriginData.y - paddingTop)/(seatCellSpace*5/4*ctxOriginData.scale));
+
+                if(cellColOffset>0&&cellColOffset<=seatCellSpace*ctxOriginData.scale&&column>=0&&cellRowOffset>0&&row>=0&&cellRowOffset<=seatCellSpace*ctxOriginData.scale){
+                    console.log('click seat',(row+1)+'排'+(column+1) + '座位');
+                }
+                //ctxOriginData.scale += 0.1;
+                //cs.drawCanvas();
+            }
+        }
+
+        var cs = this;
+        cs.params = params;
+
+        cs.init = function () {
+            //初始化设置canvas 大小及css样式
+            seatCanvas = document.querySelector(container);
+            seatCanvas.width = cs.params.width*2;
+            seatCanvas.height = cs.params.height*2;
+            seatCanvas.style = "width: " + cs.params.width + "px;height: "+cs.params.height+"px;background: rgba(0,0,0,.1);"
+            ctx = seatCanvas.getContext('2d');
+
+            seatCellSpace = Math.floor((seatCanvas.width-50)*8/(9*columns - 1));//计算座位占据的空间大小
+            allSeatWidth =  seatCellSpace*columns+seatCellSpace/8*(columns-1);
+            allSeatHeight = seatCellSpace*rows + seatCellSpace/4*(rows-1);
+            paddingLR = (seatCanvas.width - allSeatWidth) / 2;
+
+            cs.initEventListener();
+            cs.drawCanvas()
+            return cs;
+        }
+
+        cs.drawCanvas = function (){
+            ctx.clearRect(0,0,seatCanvas.width,seatCanvas.height);
+            cs.drawCenterLine()
+            cs.drawSeat();
+            cs.drawScreen();
+            cs.drawSeatIndex();
+
+        }
+
+        cs.drawScreen = function drawScreen(){
+            ctx.save();
+            var x = ctxOriginData.x + seatCanvas.width/2*ctxOriginData.scale
+            var y = 0;
+            ctx.drawImage(screenImg, 0, 0, 301, 44, x - 150, y, 301, 50);
+            ctx.font="30px Arial";
+            var txt="1号厅银幕";
+            var txtWidth = ctx.measureText(txt).width
+            ctx.fillText(txt,x-txtWidth/2,38);
+            ctx.restore();
+        }
+
+        cs.drawSeat = function drawSeat() {
+            ctx.save();
+            let space = seatCellSpace * ctxOriginData.scale;
+            let startX = ctxOriginData.x + paddingLR, startY = ctxOriginData.y + paddingTop, columnSpace = space/8, rowspace = space/4;
+            for(let i=0;i<rows;++i){
+                for(let j=0;j<columns;++j){
+                    ctx.drawImage(seatImg, 0, 0, 80, 80, startX, startY, space, space);
+                    startX += space + columnSpace;
+                }
+                startY += space + rowspace;
+                startX = ctxOriginData.x + paddingLR;
+            }
+            ctx.restore();
+        }
+
+        cs.drawSeatIndex = function drawSeatIndex() {
+            ctx.save()
+            //设置座位引导图的属性
+            let width = 32;
+            let offsetX = 10;
+            let offsetY = paddingTop + ctxOriginData.y;
+
+            let paddingTB = 5;
+
+            let space = seatCellSpace*ctxOriginData.scale;
+
+            ctx.beginPath();
+            ctx.arc(offsetX+width/2, offsetY-paddingTB, width/2, 0, Math.PI, true);
+            ctx.lineTo(offsetX,offsetY+space*5/4*rows - space/4+paddingTB);
+            ctx.arc(offsetX+width/2, offsetY+space*5/4*rows - space/4+paddingTB, width/2,Math.PI ,0, true);
+            ctx.lineTo(offsetX+width, offsetY-paddingTB)
+            ctx.fillStyle = 'rgba(0,0,0,.3)';
+            ctx.fill()
+            /*ctx.restore();
+            //画排号
+            ctx.save();*/
+            ctx.font="30px Arial";
+            ctx.fillStyle = 'white'
+
+            for(let row=0;row<rows;++row){
+                let txt = (row+1)+'';
+                let txtWidth = ctx.measureText(txt).width
+                ctx.fillText(txt,offsetX + (width-txtWidth)/2, offsetY + seatCellSpace*ctxOriginData.scale*5/4*row + (seatCellSpace*ctxOriginData.scale + 16)/2)
+            }
+            ctx.restore();
+        }
+
+        cs.drawCenterLine = function drawCenterLine() {
+            //画一条中线
+            ctx.save()
+            //ctx.translate(ctxCurrentXY.x*scale,0);
+            let space = seatCellSpace*ctxOriginData.scale;
+            let y = ctxOriginData.y + paddingTop;
+            ctx.beginPath();
+            ctx.setLineDash([20,5]);
+            ctx.moveTo(ctxOriginData.x + seatCanvas.width*ctxOriginData.scale/2, y)
+            ctx.lineTo(ctxOriginData.x + seatCanvas.width*ctxOriginData.scale/2, y+space*5/4*rows-space/4)
+            ctx.lineWidth = 1*ctxOriginData.scale;
+            ctx.strokeStyle = "darkgray";
+            ctx.stroke()
+            ctx.restore()
+        }
+
+        cs.initEventListener = function initEvensListener() {
+            seatCanvas.addEventListener('click', customHandler)
+            seatCanvas.addEventListener('touchstart', customHandler)
+            seatCanvas.addEventListener('touchmove', customHandler)
+            seatCanvas.addEventListener('touchend', customHandler)
+        }
+        cs.setCenter = function setCenter() {
+            ctxOriginData.x = -seatCanvas.width * (ctxOriginData.scale - 1)/2
+            cs.drawCanvas();
+        }
+    }
+
+
+</script>
+</body>
+</html>
