@@ -1,3 +1,11 @@
-var SearCanvs = function SeatCanvas(canvas) {
-    if(!(this instanceof SeatCanvas)) return new SeatCanvas(canvas)
+/*params = {
+    seatsContainer:null,//座位容器
+    seatsContainer:null,
+    seatsScreen:null,
+
+}*/
+let cameraSeatUtil = function (params) {
+    let options = {
+
+    }
 }

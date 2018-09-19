@@ -26,217 +26,37 @@
             width: 100%;
             height: 100%;
         }
+        .radar-map{
+            position: fixed;
+            top: 0;
+            left: 0;
+            /*opacity: 0;*/
+            transition: opacity .5s ease-in;
+        }
+        .active{
+            opacity: 1;
+        }
+        .text{
+            position: fixed;
+            top: 10px;
+            left: 0;
+            z-index: 99;
+            width: 77px;
+            border: 1px solid #00a1e0;
+            height: 4px;
+        }
     </style>
 </head>
 <body>
-<!--<div style="height: 100px;background: aliceblue">hh</div>
-<div class="seat-con">
-    <canvas id="canvasMap">
+<div class="radar-map">
+    <canvas id="radarCanvas">
 
     </canvas>
-</div>-->
-<div style="height: 50px;background: aliceblue">hh</div>
+</div>
+<div style="height: 50px;background: white"></div>
 <canvas id="canvasMap2">
 
 </canvas>
-
-<script>
-    var imgLoaded1 = false, imgLoaded2 = false;
-    var imgObj = new Image(), screenImg = new Image();
-    imgObj.src = "./seat.png";
-    screenImg.src = "data:image/svg+xml;charset=utf8,<svg width='301px' height='44px' viewBox='0 0 301 44' xmlns='http://www.w3.org/2000/svg'><g fill='red' fill-rule='evenodd'><path d='M238.5 34.593c0 5.028-4.1 9.104-9.163 9.104H95.31L14.662 44C9.6 44 5.5 39.924 5.5 34.896L0 .303 82.48 0H244l-5.5 34.593z'/><path d='M295.5 34.593c0 5.028-4.1 9.104-9.163 9.104H152.31L71.662 44C66.6 44 62.5 39.924 62.5 34.896L57 .303 139.48 0H301l-5.5 34.593z'/></g></svg>";
-    //imgObj.src = "https://gw.alicdn.com/tfs/TB1S8see3mTBuNjy1XbXXaMrVXa-256-240.png";
-    //待图片加载完后，将其显示在canvas上
-    imgObj.onload = function(){
-        imgLoaded1 = true
-        //imgLoaded1&&imgLoaded2&&SeatMap('canvasMap', imgObj, screenImg)
-    }
-    screenImg.onload = function () {
-        imgLoaded2 = true
-        //imgLoaded1&&imgLoaded2&&SeatMap('canvasMap', imgObj, screenImg)
-    }
-
-    var SeatMap = function SeatMap (id, imgobj, screenImg) {
-        var seatCanvas = document.getElementById(id);
-        var ctx = seatCanvas.getContext('2d');
-
-        //初始化设置canvas 大小及css样式
-        var width = window.screen.width;
-        var height = window.screen.height - 300;
-        seatCanvas.width = width*2;
-        seatCanvas.height = height*2;
-        seatCanvas.style = "width: " + width + "px;height: "+height+"px;background: rgba(0,0,0,.1);"
-
-        //初始化事件监听
-        initEvensListener();
-
-        //绘制初始化
-        var ctxScale = 1;
-        var ctxCurrentXY = {x:0,y:0};
-        draw(ctx, imgObj, ctxScale)
-
-        //绘制图片
-        function draw(ctx, imgObj, scale) {
-            ctx.clearRect(0,0,seatCanvas.width,seatCanvas.height);
-            //绘制座位
-            ctx.save();
-            ctx.scale(scale,scale)
-            //console.log(ctxCurrentXY.valueOf())
-            ctx.translate(ctxCurrentXY.x,ctxCurrentXY.y);
-
-            let startX = 10, startY = 70, space = 40, columnSpace = space/8, rowspace = space/4;
-            for(var i=0;i<7;++i){
-                for(var j=0;j<17;++j){
-                    ctx.drawImage(imgObj, 0, 0, 80, 80, startX, startY, space, space);
-                    startX += space + columnSpace;
-                }
-                startY += space + rowspace;
-                startX = 10;
-            }
-            ctx.restore();
-
-
-            //绘制影院座位标识
-            ctx.save()
-            ctx.translate(0,ctxCurrentXY.y)
-            //设置座位引导图的属性
-            var seatIndexCom = {
-                width: 32,
-                offsetX: 20,
-                offsetY: 50
-            }
-            ctx.beginPath();
-            ctx.arc(seatIndexCom.offsetX+seatIndexCom.width/2, seatIndexCom.offsetY+seatIndexCom.width/2, seatIndexCom.width/2, 0, Math.PI, true);
-            ctx.lineTo(seatIndexCom.offsetX,seatIndexCom.offsetY+50*7)
-            ctx.arc(seatIndexCom.offsetX+seatIndexCom.width/2, seatIndexCom.offsetY+50*7, seatIndexCom.width/2,Math.PI ,0, true);
-            ctx.lineTo(seatIndexCom.offsetX+seatIndexCom.width, seatIndexCom.offsetY+seatIndexCom.width)
-            ctx.fillStyle = 'rgba(0,0,0,.3)';
-            ctx.fill()
-            /*ctx.restore();
-            //画排号
-            ctx.save();*/
-            ctx.font="30px Arial";
-            ctx.fillStyle = 'white'
-            var txt1="1";
-            var txtWidth1 = ctx.measureText(txt1).width
-            for(var j=1;j<7;++j){
-                ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*j)
-            }
-            /*ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*1)
-            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*2)
-            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*3)
-            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*4)
-            ctx.fillText(txt1,seatIndexCom.offsetX + (seatIndexCom.width-txtWidth1)/2, seatIndexCom.offsetY+ 50*5)*/
-            ctx.restore();
-
-
-            //绘制影院屏幕及屏幕标题
-            ctx.save()
-            ctx.translate(ctxCurrentXY.x*scale,0);
-            ctx.drawImage(screenImg, 0, 0, 301, 44, seatCanvas.width*scale/2 - 150, 0, 301, 50);
-            ctx.font="30px Arial";
-            var txt="1号厅银幕";
-            var txtWidth = ctx.measureText(txt).width
-            ctx.fillText(txt,seatCanvas.width*scale/2-txtWidth/2,38);
-            ctx.restore();
-
-            //画一条中线
-            ctx.save()
-            ctx.translate(ctxCurrentXY.x*scale,0);
-            ctx.beginPath();
-            ctx.moveTo(seatCanvas.width*scale/2, 150*scale)
-            ctx.lineTo(seatCanvas.width*scale/2, 500*scale)
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = "green";
-            ctx.stroke()
-            ctx.restore()
-
-        }
-
-        //添加事件监听
-        function initEvensListener() {
-            var customHandler = {
-                data: {},
-                handleEvent: function (event) {
-                    switch (event.type) {
-                        case 'touchstart':
-                            this.handleTouchStart(event);
-                            break;
-                        case 'touchmove':
-                            this.handleTouchMove(event);
-                            break;
-                        case 'touchend':
-                            this.handleTouchEnd(event);
-                            break;
-                        case 'click':
-                            this.handleClick(event)
-                        default:
-                            break;
-                    }
-                },
-                handleTouchStart : function (e) {
-                    e = e.targetTouches[0];
-                    this.data.startX = e.pageX;
-                    this.data.startY = e.pageY;
-                    this.data.isDrag = true;
-                },
-                handleTouchMove: function (e) {
-                    if(!this.data.isDrag) return;
-                    e = e.targetTouches[0];
-
-                    var offsetX = e.pageX - this.data.startX;
-                    var offsetY = e.pageY - this.data.startY;
-
-                   this.data.startX = e.pageX;
-                   this.data.startY = e.pageY;
-                   ctxCurrentXY.x += offsetX*2;
-                   ctxCurrentXY.y += offsetY*2;
-
-
-
-                    draw(ctx, imgObj, ctxScale);
-                },
-                handleTouchEnd: function (e) {
-                    this.data.isDrag = false;
-
-                    if(ctxCurrentXY.x > 0){
-                        ctxCurrentXY.x = 0;
-                    }else if((ctxCurrentXY.x + 45*17)*ctxScale < seatCanvas.width){
-                        ctxCurrentXY.x = Math.floor(seatCanvas.width/ctxScale) - 45*17;
-                    }
-                    if(ctxCurrentXY.y > 0){
-                        ctxCurrentXY.y = 0;
-                    }else if((ctxCurrentXY.y + 50*7)*ctxScale < seatCanvas.height){
-                        if(50*7*ctxScale<seatCanvas.height){
-                            ctxCurrentXY.y = 0 ;
-                        }else{
-                            ctxCurrentXY.y = Math.floor(seatCanvas.height/ctxScale)- 50*7 - 80
-                        }
-
-                    }
-                    draw(ctx, imgObj, ctxScale)
-
-                },
-                handleClick: function (e) {
-                    //console.log('click point:',e.offsetX,e.offsetY,e)
-                    //判断点击位置
-                    var column  = Math.round((e.offsetX*2 - ctxCurrentXY.x)/45)
-                    console.log('click column',column)
-
-
-                    //ctxScale += 0.1;
-                    //draw(ctx,imgObj, ctxScale)
-                }
-            }
-            seatCanvas.addEventListener('click', customHandler)
-            seatCanvas.addEventListener('touchstart', customHandler)
-            seatCanvas.addEventListener('touchmove', customHandler)
-            seatCanvas.addEventListener('touchend', customHandler)
-        }
-    }
-
-</script>
-
 <script>
     function loadImg(callback) {
         var imgObjArr = [],
@@ -258,20 +78,22 @@
         })
     }
 
-    var cameraSeat = null;
+    var cameraSeatUtil = null,cameraRadarUtil=null;
     loadImg(function (arr) {
-        cameraSeat = CameraSeat('#canvasMap2',{
+        cameraSeatUtil = CameraSeat('#canvasMap2',{
             width:window.screen.width,
             height:500,
             seatImg:arr[0],
             screenImg: arr[1]
         }).init();
+
+        cameraRadarUtil = CameraRadar('radarCanvas',{
+        }).drawCanvas();
     })
 
 
     var CameraSeat = function (container,params) {
         if(!(this instanceof CameraSeat)) return new CameraSeat(container, params);
-
         var screenImg = params.screenImg,
             seatImg = params.seatImg,
             seatCanvas = null,
@@ -330,6 +152,9 @@
 
 
                 cs.drawCanvas();
+
+                cameraRadarUtil.setRangeRect(ctxOriginData,allSeatWidth, allSeatHeight)
+
             },
             handleTouchEnd: function (e) {
                 this.data.isDrag = false;
@@ -350,9 +175,10 @@
                 }
                 cs.drawCanvas()
 
+                cameraRadarUtil.setRangeRect(ctxOriginData,allSeatWidth,allSeatHeight);
+
             },
             handleClick: function (e) {
-                //console.log('click point:',e.offsetX,e.offsetY,e)
                 //判断点击位置
                 let cellColOffset = (e.offsetX*2 - ctxOriginData.x - paddingLR)%(seatCellSpace*9/8*ctxOriginData.scale);
                 let column  = Math.floor((e.offsetX*2 - ctxOriginData.x - paddingLR)/(seatCellSpace*9/8*ctxOriginData.scale));
@@ -360,10 +186,18 @@
                 let row  = Math.floor((e.offsetY*2 - ctxOriginData.y - paddingTop)/(seatCellSpace*5/4*ctxOriginData.scale));
 
                 if(cellColOffset>0&&cellColOffset<=seatCellSpace*ctxOriginData.scale&&column>=0&&cellRowOffset>0&&row>=0&&cellRowOffset<=seatCellSpace*ctxOriginData.scale){
-                    console.log('click seat',(row+1)+'排'+(column+1) + '座位');
+                    console.log('click seat',(row+1)+'排'+(column+1) + '座位',cellColOffset,seatCellSpace*ctxOriginData.scale);
                 }
-                //ctxOriginData.scale += 0.1;
-                //cs.drawCanvas();
+
+                let seatX = e.offsetX*2 - ctxOriginData.x - paddingLR;
+                let seatY = e.offsetY*2 - ctxOriginData.y - paddingTop;
+                ctxOriginData.x -= 0.1 * seatX/ctxOriginData.scale;
+                ctxOriginData.y -= 0.1 * seatY/ctxOriginData.scale;
+
+                ctxOriginData.scale = (ctxOriginData.scale*10+1)/10
+
+                cs.checkBound();
+                cs.drawCanvas();
             }
         }
 
@@ -395,11 +229,13 @@
             cs.drawScreen();
             cs.drawSeatIndex();
 
+            return cs;
+
         }
 
         cs.drawScreen = function drawScreen(){
             ctx.save();
-            var x = ctxOriginData.x + seatCanvas.width/2*ctxOriginData.scale
+            var x = ctxOriginData.x+ paddingLR + allSeatWidth/2*ctxOriginData.scale
             var y = 0;
             ctx.drawImage(screenImg, 0, 0, 301, 44, x - 150, y, 301, 50);
             ctx.font="30px Arial";
@@ -462,12 +298,13 @@
             //ctx.translate(ctxCurrentXY.x*scale,0);
             let space = seatCellSpace*ctxOriginData.scale;
             let y = ctxOriginData.y + paddingTop;
+            let x = ctxOriginData.x + paddingLR;
             ctx.beginPath();
             ctx.setLineDash([20,5]);
-            ctx.moveTo(ctxOriginData.x + seatCanvas.width*ctxOriginData.scale/2, y)
-            ctx.lineTo(ctxOriginData.x + seatCanvas.width*ctxOriginData.scale/2, y+space*5/4*rows-space/4)
+            ctx.moveTo(x + allSeatWidth*ctxOriginData.scale/2, y)
+            ctx.lineTo(x + allSeatWidth*ctxOriginData.scale/2, y+allSeatHeight*ctxOriginData.scale)
             ctx.lineWidth = 1*ctxOriginData.scale;
-            ctx.strokeStyle = "darkgray";
+            ctx.strokeStyle = "red";
             ctx.stroke()
             ctx.restore()
         }
@@ -479,11 +316,149 @@
             seatCanvas.addEventListener('touchend', customHandler)
         }
         cs.setCenter = function setCenter() {
-            ctxOriginData.x = -seatCanvas.width * (ctxOriginData.scale - 1)/2
+            ctxOriginData.x = seatCanvas.width/2 - allSeatWidth * ctxOriginData.scale/2 - paddingLR;
+            cs.drawCanvas();
+        }
+        cs.checkBound = function checkBound() {
+            if(ctxOriginData.x > 0){
+                ctxOriginData.x = 0;
+            }else if(ctxOriginData.x + allSeatWidth*ctxOriginData.scale + 2*paddingLR < seatCanvas.width){
+                ctxOriginData.x = seatCanvas.width - allSeatWidth*ctxOriginData.scale - 2*paddingLR;
+            }
+            if(ctxOriginData.y > 0){
+                ctxOriginData.y = 0;
+            }else if(ctxOriginData.y + paddingTop + allSeatHeight*ctxOriginData.scale + paddingBottom < seatCanvas.height){
+                if(allSeatHeight*ctxOriginData.scale+paddingTop+paddingBottom<seatCanvas.height){
+                    ctxOriginData.y = 0 ;
+                }else{
+                    ctxOriginData.y = seatCanvas.height- allSeatHeight*ctxOriginData.scale - paddingTop - paddingBottom
+                }
+            }
+        }
+        cs.setXY = function setXY(x,y) {
+            ctxOriginData.x = x;
+            ctxOriginData.y = y;
+            cs.drawCanvas();
+        }
+        cs.translateXY = function translateXY(x,y) {
+            ctxOriginData.x += x;
+            ctxOriginData.y += y;
+            cs.drawCanvas();
+        }
+        cs.setScale = function setScale(x) {
+            ctxOriginData.scale = (ctxOriginData.scale*10+10*x)/10
             cs.drawCanvas();
         }
     }
 
+
+    var CameraRadar = function (container,params) {
+        if(!(this instanceof CameraRadar)) return new CameraRadar(container, params);
+
+        params = params||{};
+        let columns = params.columns||23;
+        let rows = params.rows||10;
+
+        let seatSpace = 8,colSpace = 4,rowSpace = 4,padding=16,paddingTop= 30;
+
+        let radarCanvas = document.getElementById(container);
+        radarCanvas.width = seatSpace*columns+colSpace*(columns - 1)+2*padding;
+        radarCanvas.height = seatSpace*rows + rowSpace*(rows - 1)+padding+paddingTop;
+
+        radarCanvas.style = "width: " + radarCanvas.width/2 + "px;height: "+radarCanvas.height/2+"px;background: rgba(0,0,0,.6);"
+        let ctx = radarCanvas.getContext('2d');
+
+        var rc = this;
+
+        rc.drawCanvas = function drawCanvas() {
+            rc.drawScreen();
+            rc.drawSeat();
+            rc.drawRangeRect();
+
+            return rc;
+        }
+
+        rc.drawSeat = function drawSeat() {
+            ctx.save();
+            ctx.fillStyle = 'white';
+            let startX = padding,startY=paddingTop;
+
+            for(let row=0;row<rows;++row){
+                for(let col=0;col<columns;++col){
+                    if(col == 5){
+                        ctx.save()
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(startX,startY,seatSpace,seatSpace);
+                        ctx.restore();
+                    }else{
+                        ctx.fillRect(startX,startY,seatSpace,seatSpace);
+                    }
+
+                    startX += seatSpace + colSpace;
+                }
+                startX = padding;
+                startY += seatSpace + rowSpace;
+            }
+
+            ctx.restore();
+        }
+
+        rc.drawScreen = function drawScreen() {
+            ctx.save();
+            //ctx.strokeStyle = '#00a1e0';
+            ctx.strokeStyle = '#0abaff';
+            ctx.fillStyle = 'green';
+            ctx.lineWidth = 2;
+            let width = radarCanvas.width*0.8;
+            let height = 8;
+            let startX =radarCanvas.width*0.1;
+            let startY = 8 ;
+            ctx.strokeRect(startX, startY, width, height)
+            //ctx.fillRect(startX, startY, width, height)
+
+            ctx.restore();
+        }
+
+        rc.drawRangeRect = function drawRangeRect() {
+            ctx.save();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            let startX = padding-5, startY = paddingTop-5;
+            let seatsWidth = seatSpace*columns+colSpace*(columns - 1),seatsHeight = seatSpace*rows + rowSpace*(rows - 1);
+            ctx.strokeRect(startX, startY, seatsWidth+10, seatsHeight+10);
+
+            ctx.restore();
+        }
+
+        rc.setRangeRect = function (seatCtxData, bigSeatsWidth, bigSeatsHeight) {
+            ctx.clearRect(0,0,radarCanvas.width,radarCanvas.height)
+
+            rc.drawScreen();
+            rc.drawSeat();
+
+            ctx.save();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            let startX = padding-5, startY = paddingTop-5;
+            let seatsWidth = seatSpace*columns+colSpace*(columns - 1),seatsHeight = seatSpace*rows + rowSpace*(rows - 1);
+
+            let scaleY = bigSeatsHeight*seatCtxData.scale/(1000-80-80);
+            let rangeRectHeight = seatsHeight/(scaleY<1?1:scaleY);
+
+            let scaleX = bigSeatsWidth*seatCtxData.scale/(750-27.375*2);
+            let rangeRectWidth = seatsWidth/(scaleY<1?1:scaleX);
+
+            let rectOffsetX = seatCtxData.x*seatsWidth/(750*seatCtxData.scale);
+            let rectOffsetY = seatCtxData.y*seatsHeight/(bigSeatsHeight*seatCtxData.scale)
+
+            ctx.strokeRect(startX-rectOffsetX, startY-rectOffsetY, rangeRectWidth+10, rangeRectHeight+10);
+
+            ctx.restore();
+
+        }
+
+
+    }
 
 </script>
 </body>
