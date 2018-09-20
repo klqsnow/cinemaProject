@@ -195,6 +195,13 @@ let cameraMapUtil = function (params) {
                 break;
         }
 
+        if(!callbacks[event.type]){
+            return;
+        }
+        callbacks[event.type].forEach(function (func) {
+            func();
+        })
+
         function handleTouchStart (e) {
             e = e.targetTouches[0];
             data.startX = e.pageX;
@@ -266,7 +273,7 @@ let cameraMapUtil = function (params) {
 
 
     //雷达图参数
-    let seatSpace_radar = 8,colSpace_radar = 4,rowSpace_radar = 4,padding_radar=16,paddingTop_radar= 30;
+    let seatSpace_radar = 8,colSpace_radar = 4,rowSpace_radar = 4,padding_radar=12,paddingTop_radar= 30;
     canvasRadar.width = seatSpace_radar*columns+colSpace_radar*(columns - 1)+2*padding_radar;
     canvasRadar.height = seatSpace_radar*rows + rowSpace_radar*(rows - 1)+padding_radar+paddingTop_radar;
 
@@ -338,6 +345,13 @@ let cameraMapUtil = function (params) {
         ctxRadar.restore();
     }
 
-
+    let callbacks = {};
+    me.on = function (eventType, callback) {
+        if (!callbacks[eventType]){
+            callbacks[eventType] = [];
+        }
+        callbacks[eventType].push(callback)
+        return me;
+    }
 
 }
